@@ -1,23 +1,31 @@
-import React from "react";
+import React, { useEffect, useContext } from "react";
+import { Context } from "../store/appContext";
 
-const DetailedCard = () => {
+const DetailedCard = ({ data, type }) => {
+  const { actions, store } = useContext(Context);
 
-    return (
+  // Llamada inicial a la acción para obtener personajes, planetas y vehículos
+  useEffect(() => {
+    actions.getCharacters();
+    actions.getPlanets();
+    actions.getVehicles();
+  }, []);
+
+  return (
     <div className="container mt-5">
       <div className="card shadow">
         <div className="row g-0">
           <div className="col-md-4 text-center">
             <img
-              src="https://nsabers.es/cdn/shop/articles/opolar_httpss.mj.runWO-xsj2B4pM_A_super_realistic_portrait_of_d96eeb79-b220-46ac-9305-fe7a83dfaf4f_0.png?v=1722400402"
-              alt="Character"
+              src={data.image}
+              alt={data.name || data.title || "Unknown"}
               className="img-fluid p-3"
             />
           </div>
           <div className="col-md-8 p-4">
-            <h2 className="mb-3">Luke Skywalker</h2>
+            <h2 className="mb-3">{data.name || data.title || "Unknown"}</h2>
             <p className="text-muted">
-            Luke Skywalker fue un legendario héroe de guerra y Jedi que fundó la Nueva Orden Jedi. Era el hijo del Caballero
-            Jedi Anakin Skywalker y la senadora Padmé Amidala de Naboo, además hermano mellizo de Leia Organa.
+              {data.wiki || "No description available"}
             </p>
             <button className="btn btn-primary float-end">
               Favorites <span className="badge bg-secondary">0</span>
@@ -26,30 +34,70 @@ const DetailedCard = () => {
         </div>
         <hr />
         <div className="row text-center text-danger mt-3">
-          <div className="col">
-            <p><strong>Name</strong></p>
-            <p>Luke Skywalker</p>
-          </div>
-          <div className="col">
-            <p><strong>Birth Year</strong></p>
-            <p>19BBY</p>
-          </div>
-          <div className="col">
-            <p><strong>Gender</strong></p>
-            <p>Male</p>
-          </div>
-          <div className="col">
-            <p><strong>Height</strong></p>
-            <p>172</p>
-          </div>
-          <div className="col">
-            <p><strong>Skin Color</strong></p>
-            <p>Fair</p>
-          </div>
-          <div className="col">
-            <p><strong>Eye Color</strong></p>
-            <p>Blue</p>
-          </div>
+          {type === "character" && (
+            <>
+              <div className="col">
+                <p><strong>Birth Year</strong></p>
+                <p>{data.born || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Gender</strong></p>
+                <p>{data.gender || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Height</strong></p>
+                <p>{data.height || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Skin Color</strong></p>
+                <p>{data.skinColor || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Eye Color</strong></p>
+                <p>{data.eyeColor || "Unknown"}</p>
+              </div>
+            </>
+          )}
+          {type === "planet" && (
+            <>
+              <div className="col">
+                <p><strong>Climate</strong></p>
+                <p>{data.climate || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Diameter</strong></p>
+                <p>{data.diameter || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Population</strong></p>
+                <p>{data.population || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Terrain</strong></p>
+                <p>{data.terrain || "Unknown"}</p>
+              </div>
+            </>
+          )}
+          {type === "vehicle" && (
+            <>
+              <div className="col">
+                <p><strong>Model</strong></p>
+                <p>{data.model || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Cargo Capacity</strong></p>
+                <p>{data.cargo_capacity || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Length</strong></p>
+                <p>{data.length || "Unknown"}</p>
+              </div>
+              <div className="col">
+                <p><strong>Passengers</strong></p>
+                <p>{data.passengers || "Unknown"}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
