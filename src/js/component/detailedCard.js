@@ -1,15 +1,15 @@
 import React, { useEffect, useContext } from "react";
 import { Context } from "../store/appContext";
 
-const DetailedCard = ({ data, type }) => {
-  const { actions, store } = useContext(Context);
+const DetailedCard = ({ data, type, image, onFavorite }) => {
+  const { actions } = useContext(Context);
 
-  // Llamada inicial a la acción para obtener personajes, planetas y vehículos
+  // No es necesario obtener los personajes, planetas o vehículos aquí, ya que se manejan en DetailedView.js
   useEffect(() => {
     actions.getCharacters();
     actions.getPlanets();
     actions.getVehicles();
-  }, []);
+  }, [actions]);
 
   return (
     <div className="container mt-5">
@@ -17,18 +17,22 @@ const DetailedCard = ({ data, type }) => {
         <div className="row g-0">
           <div className="col-md-4 text-center">
             <img
-              src={data.image}
+              src={image || "https://via.placeholder.com/800x600"}
               alt={data.name || data.title || "Unknown"}
               className="img-fluid p-3"
+              style={{
+                maxHeight: "600px",
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
+              }}
             />
           </div>
           <div className="col-md-8 p-4">
             <h2 className="mb-3">{data.name || data.title || "Unknown"}</h2>
-            <p className="text-muted">
-              {data.wiki || "No description available"}
-            </p>
-            <button className="btn btn-primary float-end">
-              Favorites <span className="badge bg-secondary">0</span>
+            <p className="text-muted">{data.wiki || "No description available"}</p>
+            <button className="btn btn-primary float-end" onClick={onFavorite}>
+              Add to favorites <i className="fas fa-heart text-danger"></i>
             </button>
           </div>
         </div>

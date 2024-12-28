@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import DetailedCard from "../component/detailedCard"; // Ajusta la ruta según la ubicación
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useLocation } from "react-router-dom";
+import DetailedCard from "../component/detailedCard";
+import { Context } from "../store/appContext";
 
 const DetailedView = () => {
-  const { type, uid } = useParams(); // Obtener 'type' y 'uid' de la URL
+  const { type, uid } = useParams(); // Obtiene 'type' y 'uid' de la URL
+  const location = useLocation();
+  const { actions } = useContext(Context); // Accede a las acciones del contexto
   const [data, setData] = useState(null);
+  const image = new URLSearchParams(location.search).get("image");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -12,16 +16,14 @@ const DetailedView = () => {
         let response = null;
 
         if (type === "character") {
-          // El mismo proceso que antes para personajes
           const charactersResponse = await fetch("https://akabab.github.io/starwars-api/api/all.json");
           const charactersData = await charactersResponse.json();
-          const character = charactersData[uid]; // Usamos el índice 'uid' como posición
-          setData(character); // Asignamos los datos del personaje encontrado
+          const character = charactersData[parseInt(uid)];
+          setData(character);
         } else if (type === "planet") {
-          // Usamos el 'uid' como el número de ID del planeta
           response = await fetch(`https://swapi.py4e.com/api/planets/${uid}/`);
         } else if (type === "vehicle") {
-          response = await fetch(`https://www.swapi.tech/api/vehicles/${uid}`);
+          response = await fetch(`https://www.swapi.tech/api/vehicles/${uid}/`);
         }
 
         if (response && !response.ok) {
@@ -29,12 +31,12 @@ const DetailedView = () => {
           return;
         }
 
-        const result = await response.json();
+        const result = response ? await response.json() : null;
 
         if (type === "planet") {
-          setData(result); // Asignamos los datos del planeta
-        } else if (response) {
-          setData(result.result.properties); // Para vehículos
+          setData(result);
+        } else if (type === "vehicle" && result) {
+          setData(result.result.properties);
         }
       } catch (error) {
         console.log("Error al obtener detalles:", error);
@@ -42,7 +44,11 @@ const DetailedView = () => {
     };
 
     fetchData();
-  }, [uid, type]);
+  }, [uid, type]); // Dependencias: 'uid' y 'type'
+
+  const handleFavorite = (item) => {
+    actions.addFavorite(item); // Añadir a favoritos
+  };
 
   if (!data) {
     return <p>Loading details...</p>;
@@ -51,7 +57,7 @@ const DetailedView = () => {
   return (
     <div>
       <h1>Detailed View</h1>
-      <DetailedCard data={data} type={type} /> {/* Pasar los datos y el tipo */}
+      <DetailedCard data={data} type={type} image={image} onFavorite={() => handleFavorite(data)} />
     </div>
   );
 };
