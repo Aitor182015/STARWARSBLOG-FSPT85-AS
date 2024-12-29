@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState } from "react";
 import { Context } from "../store/appContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "../../styles/home.css";
 
 // Definir imágenes de vehículos y planetas
@@ -17,23 +17,22 @@ const vehicleImages = {
   "24": "https://www.brickfanatics.com/wp-content/uploads/2023/03/Star-Wars-Return-of-the-Jedi-Jabbas-Sail-Barge-800x445.jpg",
 };
 
-const planetImages = [
-  "https://static.wikia.nocookie.net/esstarwars/images/b/b0/Tatooine_TPM.png/revision/latest?cb=20131214162357",
-  "https://static.wikia.nocookie.net/esstarwars/images/4/4a/Alderaan.jpg/revision/latest/thumbnail/width/360/height/360?cb=20100723184830",
-  "https://static.wikia.nocookie.net/esstarwars/images/d/d4/Yavin-4-SWCT.png/revision/latest?cb=20170924222729",
-  "https://static.wikia.nocookie.net/esstarwars/images/1/1d/Hoth_SWCT.png/revision/latest?cb=20170802030704",
-  "https://static.wikia.nocookie.net/esstarwars/images/1/1c/Dagobah.jpg/revision/latest?cb=20061117132132",
-  "https://static.wikia.nocookie.net/esstarwars/images/2/2c/Bespin_EotECR.png/revision/latest?cb=20170527220537",
-  "https://static.wikia.nocookie.net/esstarwars/images/5/50/Endor_FFGRebellion.png/revision/latest?cb=20170629163352",
-  "https://static.wikia.nocookie.net/esstarwars/images/f/f0/Naboo_planet.png/revision/latest?cb=20190928214307",
-  "https://static.wikia.nocookie.net/esstarwars/images/1/16/Coruscant-EotE.jpg/revision/latest/scale-to-width-down/1200?cb=20221030195452",
-  "https://static.wikia.nocookie.net/esstarwars/images/a/a9/Eaw_Kamino.jpg/revision/latest?cb=20210616005549",
-];
+const planetImages = {
+  "1": "https://static.wikia.nocookie.net/esstarwars/images/b/b0/Tatooine_TPM.png/revision/latest?cb=20131214162357",
+  "2": "https://static.wikia.nocookie.net/esstarwars/images/4/4a/Alderaan.jpg/revision/latest/thumbnail/width/360/height/360?cb=20100723184830",
+  "3": "https://static.wikia.nocookie.net/esstarwars/images/d/d4/Yavin-4-SWCT.png/revision/latest?cb=20170924222729",
+  "4": "https://static.wikia.nocookie.net/esstarwars/images/1/1d/Hoth_SWCT.png/revision/latest?cb=20170802030704",
+  "5": "https://static.wikia.nocookie.net/esstarwars/images/1/1c/Dagobah.jpg/revision/latest?cb=20061117132132",
+  "6": "https://static.wikia.nocookie.net/esstarwars/images/2/2c/Bespin_EotECR.png/revision/latest?cb=20170527220537",
+  "7": "https://static.wikia.nocookie.net/esstarwars/images/5/50/Endor_FFGRebellion.png/revision/latest?cb=20170629163352",
+  "8": "https://static.wikia.nocookie.net/esstarwars/images/f/f0/Naboo_planet.png/revision/latest?cb=20190928214307",
+  "9": "https://static.wikia.nocookie.net/esstarwars/images/1/16/Coruscant-EotE.jpg/revision/latest/scale-to-width-down/1200?cb=20221030195452",
+  "10": "https://static.wikia.nocookie.net/esstarwars/images/a/a9/Eaw_Kamino.jpg/revision/latest?cb=20210616005549",
+};
 
 export const Home = () => {
   const { actions, store } = useContext(Context);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();  // Hook de navegación para redirigir después de agregar un favorito
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,19 +46,46 @@ export const Home = () => {
   }, []);
 
   const handleFavorite = (item, type) => {
+    let image = "";
+    let id = "";
+
+    console.log("Item:", item); // Ver cómo es el objeto que estamos recibiendo
+    console.log("Type:", type); // Verificar el tipo que estamos pasando
+
+    if (type === "planet") {
+      // Si el item tiene una url, extraemos el id con una expresión regular
+      if (item.url) {
+        const match = item.url.match(/\/(\d+)\//);
+        if (match) {
+          id = match[1]; // Extraemos el número como id
+        }
+      }
+      // Asignar la imagen de acuerdo al id
+      image = planetImages[id] || "https://via.placeholder.com/150";
+    } else if (type === "vehicle") {
+      id = item.uid || "unknown";
+      image = vehicleImages[id] || "https://via.placeholder.com/150";
+    } else if (type === "character") {
+      image = item.image || "https://via.placeholder.com/150";
+      id = item.uid || item.index || "unknown";
+    }
+
+    // For the favorite button, set ID to -1 for the image
+    if (id === "unknown") {
+      id = "-1";
+    }
+
+    console.log("Final ID:", id);
+
     const favorite = {
-      id: item.id ? item.id - 1 : item.uid, // Ajuste para restar 1 al id de los personajes
+      id: id,
       name: item.name || item.details?.name,
-      type: type, // Tipo de elemento: "character", "planet", "vehicle"
-      image: item.image || vehicleImages[item.uid] || planetImages[item.index] || "https://via.placeholder.com/150",
+      type: type,
+      image: image,
     };
 
     actions.addFavorite(favorite);
-
-    // Redirigir a la vista detallada del planeta
-    if (type === "planet") {
-      navigate(`/detailedView/planet/${item.index + 1}?image=${encodeURIComponent(planetImages[item.index])}`);
-    }
+    console.log("Favorite added:", favorite);
   };
 
   return (
@@ -85,7 +111,7 @@ export const Home = () => {
                     <p className="card-text">Eye color: {character.eyeColor}</p>
                     <div className="d-flex justify-content-between">
                       <Link
-                        to={`/detailedView/character/${character.id - 1}?image=${encodeURIComponent(character.image || "https://via.placeholder.com/150")}`}
+                        to={`/detailedView/character/${index}?image=${encodeURIComponent(character.image || "https://via.placeholder.com/150")}`}
                         className="btn btn-primary"
                       >
                         Learn More
@@ -108,7 +134,7 @@ export const Home = () => {
               store.planets.map((planet, index) => (
                 <div key={index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
                   <img
-                    src={planetImages[index] || "https://via.placeholder.com/150"}
+                    src={planetImages[index+1] || "https://via.placeholder.com/150"}
                     className="card-img-top"
                     alt={planet.name}
                   />
@@ -118,7 +144,7 @@ export const Home = () => {
                     <p className="card-text">Terrain: {planet.terrain}</p>
                     <div className="d-flex justify-content-between">
                       <Link
-                        to={`/detailedView/planet/${index + 1}?image=${encodeURIComponent(planetImages[index])}`}
+                        to={`/detailedView/planet/${planet.url.match(/\/(\d+)\//)[1]}?image=${encodeURIComponent(planetImages[planet.url.match(/\/(\d+)\//)[1]] || "https://via.placeholder.com/150")}`}
                         className="btn btn-primary"
                       >
                         Learn More
@@ -151,7 +177,7 @@ export const Home = () => {
                     <p className="card-text">Cargo Capacity: {vehicle.details.cargo_capacity}</p>
                     <div className="d-flex justify-content-between">
                       <Link
-                        to={`/detailedView/vehicle/${vehicle.uid}?image=${encodeURIComponent(vehicleImages[vehicle.uid] || "https://via.placeholder.com/150")}`}
+                        to={`/detailedView/vehicle/${vehicle.uid || index + 1}?image=${encodeURIComponent(vehicleImages[vehicle.uid] || "https://via.placeholder.com/150")}`}
                         className="btn btn-primary"
                       >
                         Learn More
