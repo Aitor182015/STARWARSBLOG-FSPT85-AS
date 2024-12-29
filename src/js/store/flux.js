@@ -27,20 +27,23 @@ const getState = ({ getStore, getActions, setStore }) => {
             // Obtener planetas
             getPlanets: async () => {
                 try {
-                    let response = await fetch('https://swapi.py4e.com/api/planets/');
+                    let response = await fetch("https://swapi.py4e.com/api/planets/");
                     if (response.ok) {
                         let data = await response.json();
                         setStore({ planets: data.results });
                     }
                 } catch (error) {
-                    console.log('Error fetching planets:', error);
+                    console.log("Error fetching planets:", error);
                 }
             },
 
             // Obtener vehículos
-            getVehicles: async () => {
+            getVehicles: async (force = false) => {
+                const store = getStore();
+                if (!force && store.vehicles.length > 0) return;
+
                 try {
-                    let response = await fetch('https://www.swapi.tech/api/vehicles/');
+                    let response = await fetch("https://www.swapi.tech/api/vehicles/");
                     if (response.ok) {
                         let data = await response.json();
                         const vehiclesWithDetails = await Promise.all(
@@ -50,7 +53,7 @@ const getState = ({ getStore, getActions, setStore }) => {
                                     let detailsData = await detailsResponse.json();
                                     return {
                                         ...vehicle,
-                                        details: detailsData.result.properties
+                                        details: detailsData.result.properties,
                                     };
                                 }
                                 return vehicle;
@@ -59,24 +62,42 @@ const getState = ({ getStore, getActions, setStore }) => {
                         setStore({ vehicles: vehiclesWithDetails });
                     }
                 } catch (error) {
-                    console.log('Error fetching vehicles:', error);
+                    console.log("Error fetching vehicles:", error);
                     setStore({ vehicles: [] });
                 }
             },
 
             // Agregar un elemento a favoritos
-            addFavorite: (item, type) => {
+            addFavorite: (item) => {
                 const store = getStore();
-                // Evitar duplicados al agregar a favoritos
-                if (!store.favorites.some(fav => fav.id === item.id)) {
-                    setStore({ favorites: [...store.favorites, { ...item, type }] }); // Guarda el tipo también
+
+                // Comparación más robusta para evitar duplicados
+                const isDuplicate = store.favorites.some((fav) => {
+                    if (fav.id && item.id) {
+                        return fav.id === item.id;  // Compara personajes/planetas por id
+                    } else if (fav.uid && item.uid) {
+                        return fav.uid === item.uid;  // Compara vehículos por uid
+                    }
+                    return false;
+                });
+
+                if (!isDuplicate) {
+                    // Agregar el nuevo favorito
+                    setStore({
+                        favorites: [...store.favorites, item],
+                    });
+                    console.log("Favorite added:", item); // Depuración
+                } else {
+                    console.log("Item already in favorites:", item); // Depuración
                 }
             },
 
             // Eliminar un favorito
             removeFavorite: (id) => {
                 const store = getStore();
-                setStore({ favorites: store.favorites.filter(fav => fav.id !== id) });
+                setStore({
+                    favorites: store.favorites.filter((fav) => fav.id !== id && fav.uid !== id),
+                });
             },
         },
     };

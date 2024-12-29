@@ -4,12 +4,19 @@ import { Context } from "../store/appContext";
 const DetailedCard = ({ data, type, image, onFavorite }) => {
   const { actions } = useContext(Context);
 
-  // No es necesario obtener los personajes, planetas o vehículos aquí, ya que se manejan en DetailedView.js
+  // Usamos useEffect para cargar solo los datos necesarios
   useEffect(() => {
-    actions.getCharacters();
-    actions.getPlanets();
-    actions.getVehicles();
-  }, [actions]);
+    // Solo obtener los datos de personajes, planetas o vehículos si es necesario
+    if (type === "character") {
+      actions.getCharacters(); // Solo obtiene personajes si el tipo es character
+    }
+    if (type === "planet") {
+      actions.getPlanets(); // Solo obtiene planetas si el tipo es planet
+    }
+    if (type === "vehicle") {
+      actions.getVehicles(true); // Forzamos la carga de vehículos si el tipo es vehicle
+    }
+  }, [actions, type]); // Dependiendo del tipo de entidad, cargamos los datos
 
   return (
     <div className="container mt-5">
@@ -109,3 +116,4 @@ const DetailedCard = ({ data, type, image, onFavorite }) => {
 };
 
 export default DetailedCard;
+
