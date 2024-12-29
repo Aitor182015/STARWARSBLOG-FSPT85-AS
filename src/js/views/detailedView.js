@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import DetailedCard from "../component/detailedCard";
 import { Context } from "../store/appContext";
 
@@ -27,7 +27,8 @@ const fetchWithRetry = async (url, retries = 3, delay = 2000) => {
 const DetailedView = () => {
   const { type, uid } = useParams(); // Obtiene 'type' y 'uid' de la URL
   const location = useLocation();
-  const { actions } = useContext(Context); // Accede a las acciones del contexto
+  const navigate = useNavigate(); // Usamos navigate para redirigir
+  const { actions, store } = useContext(Context); // Accede al store y acciones del contexto
   const [data, setData] = useState(null);
   const image = new URLSearchParams(location.search).get("image");
 
@@ -61,17 +62,29 @@ const DetailedView = () => {
         } else if (type === "planet") {
           console.log(`Fetching planet data for id: ${uid}`);
           response = await fetchWithRetry(`https://swapi.py4e.com/api/planets/${uid}/`);
-          setData({ ...response, id: uid, type });
+          setData({ ...response, id: uid, type, image: "https://via.placeholder.com/150?text=Planet" }); // Imagen predeterminada para planetas
 
           // Almacena los datos en localStorage
-          localStorage.setItem(`${type}-${uid}`, JSON.stringify({ ...response, id: uid, type }));
+          localStorage.setItem(`${type}-${uid}`, JSON.stringify({ ...response, id: uid, type, image: "https://via.placeholder.com/150?text=Planet" }));
         } else if (type === "vehicle") {
           console.log(`Fetching vehicle data for id: ${uid}`);
           response = await fetchWithRetry(`https://www.swapi.tech/api/vehicles/${uid}/`);
-          setData({ ...response.result.properties, id: uid, type });
+          const vehicleData = response.result.properties; // Accedemos a la propiedad correcta para obtener los datos
+
+          setData({
+            ...vehicleData,
+            id: uid,
+            type,
+            image: vehicleData.image || "https://via.placeholder.com/150?text=Vehicle", // Imagen predeterminada si no existe una
+          });
 
           // Almacena los datos en localStorage
-          localStorage.setItem(`${type}-${uid}`, JSON.stringify({ ...response.result.properties, id: uid, type }));
+          localStorage.setItem(`${type}-${uid}`, JSON.stringify({
+            ...vehicleData,
+            id: uid,
+            type,
+            image: vehicleData.image || "https://via.placeholder.com/150?text=Vehicle",
+          }));
         } else {
           console.error(`Unknown type: ${type}`);
         }
@@ -88,15 +101,32 @@ const DetailedView = () => {
   }, [uid, type]); // Dependencias: 'uid' y 'type'
 
   const handleFavorite = (item) => {
-    const favorite = {
-      id: item.id || item.uid, // Asegúrate de usar el id correcto (para personajes, planetas, vehículos)
-      name: item.name || item.details?.name,
-      type: type, // Tipo de elemento: "character", "planet", "vehicle"
-      image: image || item.image || "https://via.placeholder.com/150", // Usa la imagen proporcionada o un valor por defecto
+    // Obtener el parámetro de la imagen de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const imageUrl = urlParams.get('image'); // Obtener el parámetro 'image' de la URL
+    
+    // Si no hay imagen en la URL, se puede poner una imagen por defecto
+    let image = imageUrl || "https://via.placeholder.com/150"; 
+  
+    // Aseguramos que el item tenga un id en el formato correcto: type-id
+    const favoriteItem = {
+      ...item,
+      id: `${item.type}-${item.id}`, // Generamos el ID en el formato 'type-id'
+      image: image, // Mantén la imagen original del item o la de la URL
     };
-    actions.addFavorite(favorite); // Añadir a favoritos
+  
+    // Verificamos que el objeto tenga los campos 'id' y 'type' antes de agregarlo a favoritos
+    if (!favoriteItem.id || !favoriteItem.type) {
+      console.error("Item does not contain valid id or type", favoriteItem);
+      return;
+    }
+  
+    actions.addFavorite(favoriteItem); // Añadir a favoritos
+    
+    // Redirigimos a la misma vista detallada con la URL original + el parámetro de imagen
+    navigate(`/detailedView/${favoriteItem.type}/${favoriteItem.id.split('-')[1]}?image=${encodeURIComponent(image)}`);
   };
-
+  
   if (!data) {
     return <p>Loading details...</p>;
   }

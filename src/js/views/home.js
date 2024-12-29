@@ -45,48 +45,49 @@ export const Home = () => {
     fetchData();
   }, []);
 
-  const handleFavorite = (item, type) => {
+  const handleFavorite = (item, type, index) => {
     let image = "";
     let id = "";
-
-    console.log("Item:", item); // Ver cómo es el objeto que estamos recibiendo
-    console.log("Type:", type); // Verificar el tipo que estamos pasando
-
+  
     if (type === "planet") {
-      // Si el item tiene una url, extraemos el id con una expresión regular
-      if (item.url) {
-        const match = item.url.match(/\/(\d+)\//);
-        if (match) {
-          id = match[1]; // Extraemos el número como id
-        }
-      }
-      // Asignar la imagen de acuerdo al id
+      const match = item.url?.match(/\/(\d+)\//);
+      id = match ? match[1] : index + 1;
       image = planetImages[id] || "https://via.placeholder.com/150";
     } else if (type === "vehicle") {
-      id = item.uid || "unknown";
+      id = item.uid || index + 1;
       image = vehicleImages[id] || "https://via.placeholder.com/150";
     } else if (type === "character") {
+      id = item.uid || item.id - 1 || index;
       image = item.image || "https://via.placeholder.com/150";
-      id = item.uid || item.index || "unknown";
     }
-
-    // For the favorite button, set ID to -1 for the image
-    if (id === "unknown") {
-      id = "-1";
+  
+    if (id === undefined || id === null || id === "unknown") {
+      console.error("Invalid ID:", id);
+      return;
     }
-
-    console.log("Final ID:", id);
-
+  
+    const uniqueId = `${type}-${id}`;
+  
+    const existingFavorite = store.favorites.find(fav => fav.id === uniqueId);
+    if (existingFavorite) {
+      console.log("This item is already in favorites");
+      return;
+    }
+  
+    // Verifica que la imagen no cambie accidentalmente
     const favorite = {
-      id: id,
+      id: uniqueId,
       name: item.name || item.details?.name,
       type: type,
       image: image,
     };
-
+  
+    // Añade el favorito
     actions.addFavorite(favorite);
-    console.log("Favorite added:", favorite);
+    console.log("Current favorites:", store.favorites);
   };
+  
+  
 
   return (
     <div className="mt-5">
@@ -96,103 +97,103 @@ export const Home = () => {
         <>
           <h1>Characters</h1>
           <div className="d-flex overflow-auto gap-3 mb-5">
-            {store.characters?.length > 0 ? (
-              store.characters.map((character, index) => (
-                <div key={index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
-                  <img
-                    src={character.image || "https://via.placeholder.com/150"}
-                    className="card-img-top"
-                    alt={character.name}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{character.name}</h5>
-                    <p className="card-text">Gender: {character.gender}</p>
-                    <p className="card-text">Hair color: {character.hairColor}</p>
-                    <p className="card-text">Eye color: {character.eyeColor}</p>
-                    <div className="d-flex justify-content-between">
-                      <Link
-                        to={`/detailedView/character/${index}?image=${encodeURIComponent(character.image || "https://via.placeholder.com/150")}`}
-                        className="btn btn-primary"
-                      >
-                        Learn More
-                      </Link>
-                      <button className="btn btn-light" onClick={() => handleFavorite(character, "character")}>
-                        <i className="fas fa-heart text-danger"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>No characters available</p>
-            )}
-          </div>
+  {store.characters?.map((character, index) => (
+    <div key={character.uid || index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
+      <img
+        src={character.image || "https://via.placeholder.com/150"}
+        className="card-img-top"
+        alt={character.name}
+      />
+      <div className="card-body">
+        <h5 className="card-title">{character.name}</h5>
+        <p className="card-text">Gender: {character.gender}</p>
+        <p className="card-text">Mass: {character.mass}</p>
+        <p className="card-text">Height: {character.height}</p>        
+        <div className="d-flex justify-content-between">
+          <Link
+            to={`/detailedView/character/${character.uid || index}?image=${encodeURIComponent(character.image || "https://via.placeholder.com/150")}`}
+            className="btn btn-primary"
+          >
+            Learn More
+          </Link>
+          <button
+            className="btn btn-light"
+            onClick={() => handleFavorite(character, "character", index)} // Asegúrate de que 'character' sea el item aquí
+          >
+            <i className="fas fa-heart text-danger"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
-          <h1>Planets</h1>
-          <div className="d-flex overflow-auto gap-3 mb-5">
-            {store.planets?.length > 0 ? (
-              store.planets.map((planet, index) => (
-                <div key={index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
-                  <img
-                    src={planetImages[index+1] || "https://via.placeholder.com/150"}
-                    className="card-img-top"
-                    alt={planet.name}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{planet.name}</h5>
-                    <p className="card-text">Population: {planet.population}</p>
-                    <p className="card-text">Terrain: {planet.terrain}</p>
-                    <div className="d-flex justify-content-between">
-                      <Link
-                        to={`/detailedView/planet/${planet.url.match(/\/(\d+)\//)[1]}?image=${encodeURIComponent(planetImages[planet.url.match(/\/(\d+)\//)[1]] || "https://via.placeholder.com/150")}`}
-                        className="btn btn-primary"
-                      >
-                        Learn More
-                      </Link>
-                      <button className="btn btn-light" onClick={() => handleFavorite(planet, "planet")}>
-                        <i className="fas fa-heart text-danger"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>No planets available</p>
-            )}
-          </div>
+{/* Para Planetas */}
+<h1>Planets</h1>
+<div className="d-flex overflow-auto gap-3 mb-5">
+  {store.planets?.map((planet, index) => (
+    <div key={planet.url.match(/\/(\d+)\//)?.[1] || index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
+      <img
+        src={planetImages[planet.url.match(/\/(\d+)\//)?.[1]] || "https://via.placeholder.com/150"}
+        className="card-img-top"
+        alt={planet.name}
+      />
+      <div className="card-body">
+        <h5 className="card-title">{planet.name}</h5>
+        <p className="card-text">Population: {planet.population}</p>
+        <p className="card-text">Terrain: {planet.terrain}</p>
+        <div className="d-flex justify-content-between">
+          <Link
+            to={`/detailedView/planet/${planet.url.match(/\/(\d+)\//)?.[1]}?image=${encodeURIComponent(planetImages[planet.url.match(/\/(\d+)\//)?.[1]] || "https://via.placeholder.com/150")}`}
+            className="btn btn-primary"
+          >
+            Learn More
+          </Link>
+          <button
+            className="btn btn-light"
+            onClick={() => handleFavorite(planet, "planet", index)} // Asegúrate de que 'planet' sea el item aquí
+          >
+            <i className="fas fa-heart text-danger"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
-          <h1>Vehicles</h1>
-          <div className="d-flex overflow-auto gap-3 mb-5">
-            {store.vehicles?.length > 0 ? (
-              store.vehicles.map((vehicle, index) => (
-                <div key={index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
-                  <img
-                    src={vehicleImages[vehicle.uid] || "https://via.placeholder.com/150"}
-                    className="card-img-top"
-                    alt={vehicle.name || "Unknown Vehicle"}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{vehicle.details.name}</h5>
-                    <p className="card-text">Model: {vehicle.details.model}</p>
-                    <p className="card-text">Cargo Capacity: {vehicle.details.cargo_capacity}</p>
-                    <div className="d-flex justify-content-between">
-                      <Link
-                        to={`/detailedView/vehicle/${vehicle.uid || index + 1}?image=${encodeURIComponent(vehicleImages[vehicle.uid] || "https://via.placeholder.com/150")}`}
-                        className="btn btn-primary"
-                      >
-                        Learn More
-                      </Link>
-                      <button className="btn btn-light" onClick={() => handleFavorite(vehicle, "vehicle")}>
-                        <i className="fas fa-heart text-danger"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>No vehicles available</p>
-            )}
-          </div>
+{/* Para Vehículos */}
+<h1>Vehicles</h1>
+<div className="d-flex overflow-auto gap-3 mb-5">
+  {store.vehicles?.map((vehicle, index) => (
+    <div key={vehicle.uid || index} className="card" style={{ width: "18rem", flexShrink: 0 }}>
+      <img
+        src={vehicleImages[vehicle.uid] || "https://via.placeholder.com/150"}
+        className="card-img-top"
+        alt={vehicle.name}
+      />
+      <div className="card-body">
+        <h5 className="card-title">{vehicle.details.name}</h5>
+        <p className="card-text">Model: {vehicle.details.model}</p>
+        <p className="card-text">Passengers: {vehicle.details.passengers}</p>
+        <div className="d-flex justify-content-between">
+          <Link
+            to={`/detailedView/vehicle/${vehicle.uid}?image=${encodeURIComponent(vehicleImages[vehicle.uid] || "https://via.placeholder.com/150")}`}
+            className="btn btn-primary"
+          >
+            Learn More
+          </Link>
+          <button
+            className="btn btn-light"
+            onClick={() => handleFavorite(vehicle, "vehicle", index)} // Asegúrate de que 'vehicle' sea el item aquí
+          >
+            <i className="fas fa-heart text-danger"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
         </>
       )}
     </div>
