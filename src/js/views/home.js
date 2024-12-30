@@ -74,7 +74,7 @@ export const Home = () => {
       return;
     }
   
-    // Verifica que la imagen no cambie accidentalmente
+    // Me aseguro de que la imagen no cambie, tenia problemas de que me cambiaba a veces la imagen por el placeholder
     const favorite = {
       id: uniqueId,
       name: item.name || item.details?.name,

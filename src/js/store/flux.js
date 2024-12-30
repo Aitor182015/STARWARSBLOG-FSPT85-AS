@@ -4,7 +4,7 @@ const getState = ({ getStore, getActions, setStore }) => {
             characters: [],
             planets: [],
             vehicles: [],
-            favorites: [], // Lista de favoritos
+            favorites: [],
         },
         actions: {
             // Obtener personajes
@@ -74,9 +74,9 @@ const getState = ({ getStore, getActions, setStore }) => {
                 // Comparación más robusta para evitar duplicados
                 const isDuplicate = store.favorites.some((fav) => {
                     if (fav.id && item.id) {
-                        return fav.id === item.id;  // Compara personajes/planetas por id
+                        return fav.id === item.id; 
                     } else if (fav.uid && item.uid) {
-                        return fav.uid === item.uid;  // Compara vehículos por uid
+                        return fav.uid === item.uid;  
                     }
                     return false;
                 });
@@ -86,9 +86,9 @@ const getState = ({ getStore, getActions, setStore }) => {
                     setStore({
                         favorites: [...store.favorites, item],
                     });
-                    console.log("Favorite added:", item); // Depuración
+                    console.log("Favorite added:", item); 
                 } else {
-                    console.log("Item already in favorites:", item); // Depuración
+                    console.log("Item already in favorites:", item); 
                 }
             },
 
