@@ -4,35 +4,59 @@ import { Context } from "../store/appContext";
 const DetailedCard = ({ data, type, image, onFavorite }) => {
   const { actions } = useContext(Context);
 
-  // Usamos useEffect para cargar solo los datos necesarios
   useEffect(() => {
-    // Solo obtener los datos de personajes, planetas o vehículos si es necesario
     if (type === "character") {
-      actions.getCharacters(); // Solo obtiene personajes si el tipo es character
+      actions.getCharacters();
     }
     if (type === "planet") {
-      actions.getPlanets(); // Solo obtiene planetas si el tipo es planet
+      actions.getPlanets();
     }
     if (type === "vehicle") {
-      actions.getVehicles(true); // Forzamos la carga de vehículos si el tipo es vehicle
+      actions.getVehicles(true);
     }
-  }, [actions, type]); // Dependiendo del tipo de entidad, cargamos los datos
+  }, [actions, type]);
+
+  const renderDetails = () => {
+    const detailsMap = {
+      character: [
+        { label: "Birth Year", value: data.born },
+        { label: "Gender", value: data.gender },
+        { label: "Height", value: data.height },
+        { label: "Skin Color", value: data.skinColor },
+        { label: "Eye Color", value: data.eyeColor },
+      ],
+      planet: [
+        { label: "Climate", value: data.climate },
+        { label: "Diameter", value: data.diameter },
+        { label: "Population", value: data.population },
+        { label: "Terrain", value: data.terrain },
+      ],
+      vehicle: [
+        { label: "Model", value: data.model },
+        { label: "Cargo Capacity", value: data.cargo_capacity },
+        { label: "Length", value: data.length },
+        { label: "Passengers", value: data.passengers },
+      ],
+    };
+
+    return detailsMap[type]?.map((detail, index) => (
+      <div key={index} className="col">
+        <p><strong>{detail.label}</strong></p>
+        <p>{detail.value || "Unknown"}</p>
+      </div>
+    ));
+  };
 
   return (
     <div className="container mt-5">
-      <div className="card shadow">
+      <div className="card bg-black text-danger shadow border border-danger">
         <div className="row g-0">
           <div className="col-md-4 text-center">
             <img
               src={image || "https://via.placeholder.com/800x600"}
               alt={data.name || data.title || "Unknown"}
               className="img-fluid p-3"
-              style={{
-                maxHeight: "600px",
-                width: "auto",
-                height: "auto",
-                objectFit: "contain",
-              }}
+              style={{ maxHeight: "600px", width: "auto", height: "auto", objectFit: "contain" }}
             />
           </div>
           <div className="col-md-8 p-4">
@@ -45,70 +69,7 @@ const DetailedCard = ({ data, type, image, onFavorite }) => {
         </div>
         <hr />
         <div className="row text-center text-danger mt-3">
-          {type === "character" && (
-            <>
-              <div className="col">
-                <p><strong>Birth Year</strong></p>
-                <p>{data.born || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Gender</strong></p>
-                <p>{data.gender || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Height</strong></p>
-                <p>{data.height || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Skin Color</strong></p>
-                <p>{data.skinColor || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Eye Color</strong></p>
-                <p>{data.eyeColor || "Unknown"}</p>
-              </div>
-            </>
-          )}
-          {type === "planet" && (
-            <>
-              <div className="col">
-                <p><strong>Climate</strong></p>
-                <p>{data.climate || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Diameter</strong></p>
-                <p>{data.diameter || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Population</strong></p>
-                <p>{data.population || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Terrain</strong></p>
-                <p>{data.terrain || "Unknown"}</p>
-              </div>
-            </>
-          )}
-          {type === "vehicle" && (
-            <>
-              <div className="col">
-                <p><strong>Model</strong></p>
-                <p>{data.model || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Cargo Capacity</strong></p>
-                <p>{data.cargo_capacity || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Length</strong></p>
-                <p>{data.length || "Unknown"}</p>
-              </div>
-              <div className="col">
-                <p><strong>Passengers</strong></p>
-                <p>{data.passengers || "Unknown"}</p>
-              </div>
-            </>
-          )}
+          {renderDetails()}
         </div>
       </div>
     </div>
@@ -116,4 +77,3 @@ const DetailedCard = ({ data, type, image, onFavorite }) => {
 };
 
 export default DetailedCard;
-

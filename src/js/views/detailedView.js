@@ -3,63 +3,64 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import DetailedCard from "../component/detailedCard";
 import { Context } from "../store/appContext";
 
-
 const DetailedView = () => {
   const { type, uid } = useParams();
   const location = useLocation();
-  const navigate = useNavigate(); 
-  const { actions, store } = useContext(Context);
+  const navigate = useNavigate();
+  const { actions } = useContext(Context);
   const [data, setData] = useState(null);
-  const image = new URLSearchParams(location.search).get("image");
+  const image = new URLSearchParams(location.search).get("image") || "https://via.placeholder.com/150";
 
   useEffect(() => {
     const fetchData = async () => {
-      
-      let cachedData = localStorage.getItem(`${type}-${uid}`); // Intenta obtener los datos del localStorage
+      const localKey = `${type}-${uid}`;
+      const cachedData = localStorage.getItem(localKey);
+
       if (cachedData) {
-        console.log("Cargando datos desde localStorage...");
-        setData(JSON.parse(cachedData)); // Si los datos están en localStorage, usarlos
+        console.log("Loading from localStorage...");
+        setData(JSON.parse(cachedData));
         return;
       }
 
       try {
-        let response = null;
+        let fetchedData;
 
-        if (type === "character") {
-          const charactersResponse = await fetch("https://akabab.github.io/starwars-api/api/all.json");
-          const charactersData = await charactersResponse.json();
-          const character = charactersData[parseInt(uid)];
-          setData({ ...character, id: uid, type });
+        // Función genérica para manejar la carga de diferentes tipos
+        const fetchByType = async () => {
+          if (type === "character") {
+            const allCharactersKey = "all-characters";
+            let allCharacters = JSON.parse(localStorage.getItem(allCharactersKey));
 
-          // Almacena los datos en localStorage de planetas
-          localStorage.setItem(`${type}-${uid}`, JSON.stringify({ ...character, id: uid, type }));
-        } else if (type === "planet") {
-          console.log(`Fetching planet data for id: ${uid}`);
-          response = await fetchWithRetry(`https://swapi.py4e.com/api/planets/${uid}/`);
-          setData({ ...response, id: uid, type, image: "https://via.placeholder.com/150?text=Planet" }); // Imagen predeterminada para planetas
+            if (!allCharacters) {
+              console.log("Fetching characters from API...");
+              const response = await fetch("https://akabab.github.io/starwars-api/api/all.json");
+              allCharacters = await response.json();
+              localStorage.setItem(allCharactersKey, JSON.stringify(allCharacters));
+            }
 
-          // Almacena los datos en localStorage de vehiculos
-          localStorage.setItem(`${type}-${uid}`, JSON.stringify({ ...response, id: uid, type, image: "https://via.placeholder.com/150?text=Planet" }));
-        } else if (type === "vehicle") {
-          console.log(`Fetching vehicle data for id: ${uid}`);
-          response = await fetchWithRetry(`https://www.swapi.tech/api/vehicles/${uid}/`);
-          const vehicleData = response.result.properties; // Accedemos a la propiedad correcta para obtener los datos
+            return { ...allCharacters[parseInt(uid)], id: uid, type };
+          }
 
-          setData({
-            ...vehicleData,
-            id: uid,
-            type,
-            image: vehicleData.image || "https://via.placeholder.com/150?text=Vehicle", // Imagen predeterminada si no existe una
-          });
+          if (type === "planet") {
+            const response = await fetch(`https://swapi.py4e.com/api/planets/${uid}/`);
+            const planetData = await response.json();
+            return { ...planetData, id: uid, type, image };
+          }
 
-          localStorage.setItem(`${type}-${uid}`, JSON.stringify({
-            ...vehicleData,
-            id: uid,
-            type,
-            image: vehicleData.image || "https://via.placeholder.com/150?text=Vehicle",
-          }));
-        } else {
+          if (type === "vehicle") {
+            const response = await fetch(`https://www.swapi.tech/api/vehicles/${uid}/`);
+            const vehicleData = await response.json();
+            return { ...vehicleData.result.properties, id: uid, type, image: vehicleData.result.properties.image || image };
+          }
+
           console.error(`Unknown type: ${type}`);
+        };
+
+        fetchedData = await fetchByType();
+
+        if (fetchedData) {
+          localStorage.setItem(localKey, JSON.stringify(fetchedData));
+          setData(fetchedData);
         }
       } catch (error) {
         console.error("Error fetching details:", error);
@@ -69,37 +70,20 @@ const DetailedView = () => {
     if (type && uid) {
       fetchData();
     } else {
-      console.error("Invalid type or uid. No fetch performed.");
+      console.error("Invalid type or uid.");
     }
-  }, [uid, type]); 
+  }, [uid, type]);
 
   const handleFavorite = (item) => {
-   
-    const urlParams = new URLSearchParams(window.location.search);
-    const imageUrl = urlParams.get('image');
-    
-    
-    let image = imageUrl || "https://via.placeholder.com/150"; 
-  
-    
-    const favoriteItem = {
-      ...item,
-      id: `${item.type}-${item.id}`,
-      image: image, 
-    };
-  
-    // Para asegurarse que el objeto tenga los campos 'id' y 'type' antes de agregarlo a favoritos
-    if (!favoriteItem.id || !favoriteItem.type) {
-      console.error("Item does not contain valid id or type", favoriteItem);
-      return;
+    const favoriteItem = { ...item, id: `${item.type}-${item.id}`, image };
+    if (favoriteItem.id && favoriteItem.type) {
+      actions.addFavorite(favoriteItem);
+      navigate(`/detailedView/${favoriteItem.type}/${favoriteItem.id.split("-")[1]}?image=${encodeURIComponent(image)}`);
+    } else {
+      console.error("Invalid favorite item:", favoriteItem);
     }
-  
-    actions.addFavorite(favoriteItem); // Añadir a favoritos
-    
-    // Redirigimos a la misma vista detallada con la URL original + el parámetro de imagen
-    navigate(`/detailedView/${favoriteItem.type}/${favoriteItem.id.split('-')[1]}?image=${encodeURIComponent(image)}`);
   };
-  
+
   if (!data) {
     return <p>Loading details...</p>;
   }

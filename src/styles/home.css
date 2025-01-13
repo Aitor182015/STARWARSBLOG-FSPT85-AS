@@ -4,3 +4,45 @@
     object-fit: cover; 
     object-position: top;
 }
+
+body {
+    background-color: black;
+}
+
+h1 {
+    color: red;
+}
+
+/* Personalizar la barra de desplazamiento */
+::-webkit-scrollbar {
+    width: 12px; /* Ancho de la barra */
+    height: 12px; /* Altura de la barra horizontal */
+  }
+  
+  /* Personalizar el track (el área por donde se desplaza la barra) */
+  ::-webkit-scrollbar-track {
+    background-color: #343a40; /* Fondo oscuro */
+    border-radius: 10px; /* Bordes redondeados */
+  }
+  
+  /* Personalizar el thumb (la parte que se mueve) */
+  ::-webkit-scrollbar-thumb {
+    background-color: #dc3545; /* Rojo */
+    border-radius: 10px; /* Bordes redondeados */
+    border: 3px solid #212529; /* Borde delgado oscuro */
+  }
+  
+  /* Personalizar el thumb cuando está siendo activado (se arrastra) */
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #c82333; /* Rojo más oscuro */
+  }
+  
+  /* Personalizar la barra horizontal */
+  ::-webkit-scrollbar-horizontal {
+    height: 12px;
+  }
+  
+  /* Personalizar la barra vertical */
+  ::-webkit-scrollbar-vertical {
+    width: 12px;
+  }
