@@ -1,8 +1,9 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import { Context } from "../store/appContext";
 
 const DetailedCard = ({ data, type, image, onFavorite }) => {
   const { actions } = useContext(Context);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (type === "character") {
@@ -15,6 +16,11 @@ const DetailedCard = ({ data, type, image, onFavorite }) => {
       actions.getVehicles(true);
     }
   }, [actions, type]);
+
+  const handleFavoriteClick = () => {
+    setIsFavorite((prev) => !prev); // Alterna el estado entre favorito y no favorito
+    onFavorite(!isFavorite); // Llama a la función pasada como prop, pasando el nuevo estado
+  };
 
   const renderDetails = () => {
     const detailsMap = {
@@ -62,8 +68,19 @@ const DetailedCard = ({ data, type, image, onFavorite }) => {
           <div className="col-md-8 p-4">
             <h2 className="mb-3">{data.name || data.title || "Unknown"}</h2>
             <p className="text-muted">{data.wiki || "No description available"}</p>
-            <button className="btn btn-primary float-end" onClick={onFavorite}>
-              Add to favorites <i className="fas fa-heart text-danger"></i>
+            <button
+              className={`btn float-end ${isFavorite ? "btn-success" : "btn-primary"}`}
+              onClick={handleFavoriteClick}
+            >
+              {isFavorite ? (
+                <>
+                  Favorited <i className="fas fa-check text-white"></i>
+                </>
+              ) : (
+                <>
+                  Add to favorites <i className="fas fa-heart text-danger"></i>
+                </>
+              )}
             </button>
           </div>
         </div>
